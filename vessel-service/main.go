@@ -3,8 +3,10 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	pb "github.com/jmwinn21/shippy/vessel-service/proto/vessel"
+	micro "github.com/micro/go-micro"
 )
 
 type Repository interface {
@@ -47,7 +49,7 @@ func main() {
 
 	srv := micro.NewService(
 		micro.Name("go.micro.srv.vessel"),
-		micro.Version("latest")
+		micro.Version("latest"),
 	)
 
 	srv.Init()
