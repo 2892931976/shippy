@@ -6,13 +6,13 @@ import (
 )
 
 const (
-	dbName = "shippy"
+	dbName                = "shippy"
 	consignmentCollection = "consignments"
 )
 
 type Repository interface {
 	Create(*pb.Consignment) error
-	GetAll() ([]*.pb.Consignment, error)
+	GetAll() ([]*pb.Consignment, error)
 	Close()
 }
 

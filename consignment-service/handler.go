@@ -1,14 +1,16 @@
 package main
 
 import (
-	"google.golang.org/genproto/googleapis/devtools/cloudbuild/v1"
-	"log"
 	"context"
+	"log"
+
 	pb "github.com/jmwinn21/shippy/consignment-service/proto/consignment"
 	vesselProto "github.com/jmwinn21/shippy/vessel-service/proto/vessel"
+	mgo "gopkg.in/mgo.v2"
 )
 
 type service struct {
+	session      *mgo.Session
 	vesselClient vesselProto.VesselServiceClient
 }
 
@@ -22,7 +24,7 @@ func (s *service) CreateConsignment(ctx context.Context, req *pb.Consignment, re
 
 	vesselResponse, err := s.vesselClient.FindAvailable(context.Background(), &vesselProto.Specification{
 		MaxWeight: req.Weight,
-		Capacity: int32(len(req.Containers)),
+		Capacity:  int32(len(req.Containers)),
 	})
 	log.Printf("Found vessel: %s \n", vesselResponse.Vessel.Name)
 	if err != nil {
@@ -31,7 +33,7 @@ func (s *service) CreateConsignment(ctx context.Context, req *pb.Consignment, re
 
 	req.VesselId = vesselResponse.Vessel.Id
 
-	err := repo.Create(req)
+	err = repo.Create(req)
 	if err != nil {
 		return err
 	}
@@ -41,7 +43,7 @@ func (s *service) CreateConsignment(ctx context.Context, req *pb.Consignment, re
 	return nil
 }
 
-func (s *service) GetConsignemnts(ctx context.Context, req *pb.GetRequest, *res *pb.Response) error {
+func (s *service) GetConsignments(ctx context.Context, req *pb.GetRequest, res *pb.Response) error {
 	repo := s.GetRepo()
 	defer repo.Close()
 	consignments, err := repo.GetAll()
