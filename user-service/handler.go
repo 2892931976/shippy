@@ -2,8 +2,11 @@ package main
 
 import (
 	"context"
+	"errors"
+	"log"
 
 	pb "github.com/jmwinn21/shippy/user-service/proto/user"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type service struct {
@@ -22,7 +25,7 @@ func (srv *service) Get(ctx context.Context, req *pb.User, res *pb.Response) err
 
 func (srv *service) GetAll(ctx context.Context, req *pb.Request, res *pb.Response) error {
 	users, err := srv.repo.GetAll()
-	if err != nli {
+	if err != nil {
 		return err
 	}
 	res.Users = users
@@ -30,15 +33,33 @@ func (srv *service) GetAll(ctx context.Context, req *pb.Request, res *pb.Respons
 }
 
 func (srv *service) Auth(ctx context.Context, req *pb.User, res *pb.Token) error {
-	user, err := srv.reop.GetByEmailAndPassword(req)
-	if err !- nil {
+	log.Println("Logging in with:", req.Email, req.Password)
+	user, err := srv.repo.GetByEmail(req.Email)
+	log.Println(user)
+	if err != nil {
 		return err
 	}
-	res.Token = "testinabc"
+
+	// Compares our given password against the hashed password
+	// stored in the database
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
+		return err
+	}
+
+	token, err := srv.tokenService.Encode(user)
+	if err != nil {
+		return err
+	}
+	res.Token = token
 	return nil
 }
 
 func (srv *service) Create(ctx context.Context, req *pb.User, res *pb.Response) error {
+	hashedPass, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+	req.Password = string(hashedPass)
 	if err := srv.repo.Create(req); err != nil {
 		return err
 	}
@@ -47,5 +68,18 @@ func (srv *service) Create(ctx context.Context, req *pb.User, res *pb.Response) 
 }
 
 func (srv *service) ValidateToken(ctx context.Context, req *pb.Token, res *pb.Token) error {
+	claims, err := srv.tokenService.Decode(req.Token)
+	if err != nil {
+		return err
+	}
+
+	log.Println(claims)
+
+	if claims.User.Id == "" {
+		return errors.New("invalid user")
+	}
+
+	res.Valid = true
+
 	return nil
 }
