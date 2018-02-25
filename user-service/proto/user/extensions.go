@@ -6,7 +6,7 @@ import (
 )
 
 func (model *User) BeforeCreate(scope *gorm.Scope) error {
-	uuid, err := uuid.NewV4()
+	uuid := uuid.NewV4()
 	if err != nil {
 		return err
 	}
