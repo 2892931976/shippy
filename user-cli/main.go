@@ -62,7 +62,7 @@ func main() {
 			if err != nil {
 				log.Fatalf("Could not list users: %v", err)
 			}
-			for _, v := range getAll.Users {
+			for _, v := range getAll.users {
 				log.Println(v)
 			}
 

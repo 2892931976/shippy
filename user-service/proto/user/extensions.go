@@ -2,13 +2,10 @@ package go_micro_srv_user
 
 import (
 	"github.com/jinzhu/gorm"
-	"github.com/satori/go.uuid"
+	"github.com/pborman/uuid"
 )
 
 func (model *User) BeforeCreate(scope *gorm.Scope) error {
-	u, err := uuid.NewV4()
-	if err != nil {
-		return err
-	}
+	u := uuid.NewRandom()
 	return scope.SetColumn("Id", u.String())
 }
